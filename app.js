@@ -10,6 +10,7 @@ const app = express();
 
 //reest of packages
 const morgan = require("morgan");
+const cookieParser = require("cookie-parser");
 // const helmet = require("helmet");
 // const xss = require("xss-clean");
 // const cors = require("cors");
@@ -28,8 +29,13 @@ const errorHandlerMiddleware = require("./middleware/error-handler");
 
 app.use(morgan('tiny'));
 app.use(express.json());
+app.use(cookieParser(process.env.JWT_SECRET));
 
 app.get('/', (req, res) => {
+    res.send('e-commerce API');
+});
+app.get('/api/v1', (req, res) => {
+    console.log(req.cookies);
     res.send('e-commerce API');
 });
 
