@@ -1,7 +1,7 @@
 const User = require("../models/user");
 const { StatusCodes } = require("http-status-codes");
 const CustomError = require("../errors");
-
+const {createTokenUser, attachCookiesToResponse, checkPermissions} = require("../utils")
 
 const getAllUsers = async (req, res) => {
   console.log(req.user);
@@ -14,7 +14,7 @@ const getSingleUser = async (req, res) => {
   if (!user) {
     throw new CustomError.NotFoundError(`No user with id ${id}`);
   }
-  
+  checkPermissions(req.user, user._id);
   res.status(StatusCodes.OK).json({ user });
 };
 const showCurrentUser = async (req, res) => {
@@ -22,7 +22,7 @@ const showCurrentUser = async (req, res) => {
 };
 const updateUser = async (req, res) => {
   const { email, name } = req.body;
-  if (!email || !name) {
+  if (!email || !name) { 
     throw new CustomError.BadRequestError("please provide name or email");
   }
   const user = await User.findOneAndUpdate(
@@ -30,8 +30,9 @@ const updateUser = async (req, res) => {
     { email: email, name: name },
     { new: true, runValidators: true }
   );
- 
-  res.status(StatusCodes.CREATED).json({ user });
+ const tokenUser = createTokenUser(user);
+  attachCookiesToResponse({ res, user: tokenUser });
+  res.status(StatusCodes.OK).json({ user: tokenUser });
 };
 const updateUserPassword = async (req, res) => {
   const { newPassword, oldPassword } = req.body;
